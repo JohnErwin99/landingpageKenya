@@ -358,6 +358,68 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
 /* ============================================================
    STEPS — a real sequence, so it gets numbers
    ============================================================ */
+/* ============================ PRICING ============================ */
+.pricing{position:relative;padding:clamp(4rem,8vw,6.2rem) 0;overflow:hidden;background:var(--ink)}
+.pricing::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 80% at 8% 0%, var(--navy-lift) 0%, transparent 62%);
+}
+.pricing .wrap{position:relative;z-index:1}
+.pricing-head{max-width:46ch;margin-bottom:2.6rem}
+.pricing-head h2{margin:.9rem 0 1rem}
+.pricing-head p{color:#C0D0E5}
+
+.ptable{
+  border:1px solid var(--line);border-radius:var(--r);
+  background:rgba(10,23,48,.62);overflow:hidden;
+}
+.prow{display:grid;grid-template-columns:1.55fr 1fr 1fr;gap:1.4rem;align-items:center;
+  padding:1.1rem clamp(1rem,2.4vw,1.6rem);border-top:1px solid var(--line)}
+.prow:first-child{border-top:0}
+.prow-head{
+  border-top:0;align-items:end;padding-top:1.5rem;padding-bottom:1.3rem;
+  background:linear-gradient(180deg, rgba(46,139,224,.10), transparent);
+}
+.prow-head .pcol{position:relative}
+.pplan{
+  font-family:var(--display);font-weight:700;font-size:1.06rem;color:#fff;line-height:1.25;
+}
+.pplan-tag{
+  display:inline-block;margin-bottom:.55rem;padding:.22rem .6rem;border-radius:999px;
+  font-family:var(--mono);font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;
+  background:var(--crimson);color:#fff;
+}
+.pfeat{font-weight:600;color:#E6EDF7;font-size:.985rem}
+.pfeat span{display:block;font-weight:400;color:var(--slate);font-size:.85rem;margin-top:.2rem;line-height:1.5}
+.pcol{font-family:var(--mono);font-size:.94rem;color:#fff;font-weight:500}
+.pcol .muted{color:var(--slate);font-family:var(--body)}
+.pyes{display:inline-flex;align-items:center;gap:.45rem}
+.pyes svg{width:11px;height:11px;flex:none}
+.pyes .tick{width:17px;height:17px}
+
+.prow-total{
+  border-top:1px solid rgba(126,166,224,.32);
+  background:linear-gradient(180deg, transparent, rgba(211,28,91,.10));
+  padding-top:1.35rem;padding-bottom:1.45rem;
+}
+.pprice{font-family:var(--display);font-weight:800;font-size:clamp(1.5rem,3.2vw,1.95rem);color:#fff;letter-spacing:-.01em}
+.pprice small{display:block;font-family:var(--body);font-weight:500;font-size:.78rem;color:var(--slate);letter-spacing:0;margin-top:.25rem}
+
+.pricing-foot{display:flex;flex-wrap:wrap;align-items:center;gap:1rem 1.6rem;margin-top:1.8rem}
+.pricing-foot p{color:var(--slate-lo);font-size:.82rem;max-width:52ch;margin:0}
+
+@media (max-width:860px){
+  .ptable{background:transparent;border:0;border-radius:0}
+  .prow{grid-template-columns:1fr 1fr;gap:.85rem 1rem;padding:1.05rem 0}
+  .prow .pfeat{grid-column:1 / -1}
+  .prow-head{display:none}
+  .pcol::before{
+    content:attr(data-plan);display:block;font-family:var(--mono);font-size:.66rem;
+    letter-spacing:.09em;text-transform:uppercase;color:var(--chevron);margin-bottom:.3rem;
+  }
+  .prow-total{background:none}
+}
+
 .steps{position:relative;padding:clamp(4rem,8vw,6.2rem) 0;overflow:hidden}
 .steps-head{max-width:44ch;margin-bottom:3rem}
 .steps-head h2{margin:.9rem 0 1rem}
@@ -720,6 +782,69 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
         </div>
         <a class="btn btn-primary" href="#quote">Request the comparison</a>
       </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ PRICING ============================ -->
+<section class="pricing" id="pricing">
+  <div class="wrap">
+    <div class="pricing-head rise">
+      <p class="eyebrow">Pricing</p>
+      <h2>Business communications &amp; security bundles.</h2>
+      <p>Two ways in, both on one bill. Per user, per month, minimum five users.</p>
+    </div>
+
+    <div class="ptable rise">
+      <div class="prow prow-head">
+        <div class="pfeat">Included service</div>
+        <div class="pcol">
+          <span class="pplan-tag">Most popular</span>
+          <div class="pplan">Microsoft Operator Connect Bundle</div>
+        </div>
+        <div class="pcol"><div class="pplan">Webex Bundle</div></div>
+      </div>
+
+      <div class="prow">
+        <div class="pfeat">Voice allowance <span>Monthly calling time included per user.</span></div>
+        <div class="pcol" data-plan="Operator Connect">1,000 mins</div>
+        <div class="pcol" data-plan="Webex">1,000 mins</div>
+      </div>
+
+      <div class="prow">
+        <div class="pfeat">Unified communications <span>Cloud-based telephony and team collaboration platform.</span></div>
+        <div class="pcol" data-plan="Operator Connect">Operator Connect w/ Smart Manager</div>
+        <div class="pcol" data-plan="Webex">Webex Basic</div>
+      </div>
+
+      <div class="prow">
+        <div class="pfeat">Call recording <span>Entry call recording for quality, training and compliance.</span></div>
+        <div class="pcol" data-plan="Operator Connect">Entry level</div>
+        <div class="pcol" data-plan="Webex">Entry level</div>
+      </div>
+
+      <div class="prow">
+        <div class="pfeat">Cyber awareness <span>Interactive employee training to help prevent phishing and scams.</span></div>
+        <div class="pcol" data-plan="Operator Connect"><span class="pyes"><span class="tick"><svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M1.5 6.2l3 3 6-7" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Included</span></div>
+        <div class="pcol" data-plan="Webex"><span class="pyes"><span class="tick"><svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M1.5 6.2l3 3 6-7" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Included</span></div>
+      </div>
+
+      <div class="prow">
+        <div class="pfeat">Endpoint security <span>Antivirus and device protection for PCs, mobiles and file servers.</span></div>
+        <div class="pcol" data-plan="Operator Connect">ESET Protect Entry</div>
+        <div class="pcol" data-plan="Webex">ESET Protect Entry</div>
+      </div>
+
+      <div class="prow prow-total">
+        <div class="pfeat">Total price <span>Per user / month, VAT included. Minimum 5 users.</span></div>
+        <div class="pcol" data-plan="Operator Connect"><div class="pprice">KSh 20,000<small>per user / month</small></div></div>
+        <div class="pcol" data-plan="Webex"><div class="pprice">KSh 29,000<small>per user / month</small></div></div>
+      </div>
+    </div>
+
+    <div class="pricing-foot rise">
+      <a class="btn btn-primary" href="#quote">Get your quote</a>
+      <p>Prices include VAT. Need a mix of both bundles, or more than 1,000 minutes? Tell us your headcount and we'll price it on one invoice.</p>
     </div>
   </div>
 </section>
