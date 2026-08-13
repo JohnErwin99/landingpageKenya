@@ -145,17 +145,9 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
 .head-tel:hover{color:var(--chevron)}
 
 /* Logo lockup */
-.logo{display:flex;flex-direction:column;gap:2px;text-decoration:none;line-height:1}
-.logo-img{
-  height:34px;width:auto;
-  /* If the supplied file has a dark wordmark, uncomment the next line for the dark header: */
-  /* filter:brightness(0) invert(1); */
-}
-.logo-sub{
-  font-family:var(--display);font-weight:500;font-size:.98rem;color:#B7C6DA;
-  letter-spacing:-.01em;margin-left:2px;
-}
-@media (max-width:620px){ .logo-img{height:28px} .logo-sub{font-size:.88rem} }
+.logo{display:flex;align-items:center;text-decoration:none;line-height:1}
+.logo-img{height:46px;width:auto;display:block}
+@media (max-width:620px){ .logo-img{height:36px} }
 
 /* ============================================================
    HERO
@@ -571,7 +563,6 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
   <div class="wrap head-in">
     <a class="logo" href="#top" aria-label="Iristel Kenya home">
       <img class="logo-img" src="assets/logo-iristel-kenya.png" alt="Iristel Kenya">
-      <span class="logo-sub">Kenya</span>
     </a>
     <div class="head-actions">
       <a class="head-tel" href="tel:+254208788888">+254 20 878 8888</a>
