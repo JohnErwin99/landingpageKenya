@@ -369,7 +369,21 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
   content:"";position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(120% 80% at 8% 0%, var(--navy-lift) 0%, transparent 62%);
 }
-.pricing .wrap{position:relative;z-index:1}
+/* Same photo construction as the hero, faded out under the copy column. */
+.pricing-photo{position:absolute;inset:0;z-index:1;pointer-events:none}
+.pricing-photo img{
+  position:absolute;top:0;right:0;height:100%;width:78%;object-fit:cover;object-position:58% 45%;
+  opacity:.42;
+  -webkit-mask-image:linear-gradient(100deg,transparent 8%,rgba(0,0,0,.55) 34%,#000 72%);
+  mask-image:linear-gradient(100deg,transparent 8%,rgba(0,0,0,.55) 34%,#000 72%);
+}
+.pricing-photo::after{
+  content:"";position:absolute;inset:0;
+  background:
+    linear-gradient(90deg,var(--ink) 16%,rgba(4,9,26,.74) 44%,rgba(4,9,26,.56) 100%),
+    linear-gradient(0deg,var(--ink) 2%,transparent 42%);
+}
+.pricing .wrap{position:relative;z-index:2}
 .pricing-head{max-width:46ch;margin-bottom:2.6rem}
 .pricing-head h2{margin:.9rem 0 1rem}
 .pricing-head p{color:#C0D0E5}
@@ -755,7 +769,7 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
       <article class="svc rise">
         <div class="svc-ico"><svg viewBox="0 0 24 24" fill="none"><rect x="2.5" y="6" width="12" height="12" rx="2.6" stroke="currentColor" stroke-width="1.7"/><path d="M14.5 11l6.5-3.6v9.2L14.5 13" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></div>
         <h3>Teams and Webex connectivity</h3>
-        <p>Direct Routing that turns Microsoft Teams or Webex into your actual phone system — real numbers, real call quality, no second app to open.</p>
+        <p>Operator Connect that turns Microsoft Teams or Webex into your actual phone system — real numbers, real call quality, no second app to open.</p>
       </article>
 
       <article class="svc rise">
@@ -796,6 +810,9 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
 
 <!-- ============================ PRICING ============================ -->
 <section class="pricing" id="pricing">
+  <div class="pricing-photo" aria-hidden="true">
+    <img src="assets/video-call.jpg" alt="">
+  </div>
   <div class="wrap">
     <div class="pricing-head rise">
       <p class="eyebrow">Pricing</p>
@@ -907,28 +924,28 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
 
     <div>
       <details class="qa rise">
-        <summary>What does KSh 20,000 a month actually cover?</summary>
-        <div class="qa-body">It is the entry point for a small-team bundle — cloud calling with your own numbers, plus your choice of the connectivity, recording and security add-ons. Final pricing depends on user count, number of lines and which services you take. The quote you receive is fixed, itemised and has no hidden activation charges.</div>
+        <summary>What is included in the KSh 20,000/month starting bundle?</summary>
+        <div class="qa-body">The bundle is an all-in-one package for Microsoft Teams users. As a certified Microsoft Partner, Iristel provides carrier connectivity via Operator Connect so you can make external calls inside Teams. It also includes cloud calling, secure call recording, ESET Protect Entry cybersecurity, and staff awareness training on a single invoice.</div>
       </details>
       <details class="qa rise">
-        <summary>Do we have to give up Microsoft Teams or Webex?</summary>
-        <div class="qa-body">No — that is the point of Direct Routing. Your team keeps working in the app they already know, and Iristel becomes the carrier behind it, so Teams or Webex starts making and taking real calls on your business numbers.</div>
+        <summary>What cybersecurity and staff training features come with the bundle?</summary>
+        <div class="qa-body">You get ESET Protect Entry to secure your laptops, servers, and mobile devices against ransomware and malware. We also include interactive ESET Cybersecurity Awareness Training to help your employees spot phishing attempts and keep your network secure.</div>
       </details>
       <details class="qa rise">
-        <summary>Can we keep our existing phone numbers?</summary>
-        <div class="qa-body">Yes. Number porting is part of every migration we run. Your numbers stay live throughout the process, and we schedule the final cutover outside your business hours.</div>
+        <summary>Is there a minimum user requirement?</summary>
+        <div class="qa-body">Yes, the bundle requires a minimum of 5 users to activate.</div>
       </details>
       <details class="qa rise">
-        <summary>How long does a migration take?</summary>
-        <div class="qa-body">Small teams are usually live within a couple of weeks of signing; larger multi-site setups depend on porting timelines and how many locations need survey work. You get a dated plan with the quote, not an estimate after the fact.</div>
+        <summary>How does the Webex bundle differ from the Microsoft Teams bundle?</summary>
+        <div class="qa-body"><strong>Microsoft Teams:</strong> Microsoft handles your PBX, and Iristel provides PSTN connectivity via Operator Connect.<br><strong>Webex:</strong> As a certified Cisco Partner, we supply the Webex softphone app backed by our standalone Cloud PBX. You can also upgrade to full Webex UC for video meetings and team messaging.</div>
       </details>
       <details class="qa rise">
-        <summary>Who do we call when something breaks?</summary>
-        <div class="qa-body">One number, one team, whether the issue is a dropped call, a licence, or an endpoint flagged by ESET. Because everything sits on one contract, there is no vendor to blame and no ticket to forward.</div>
+        <summary>How does Operator Connect work for Microsoft Teams?</summary>
+        <div class="qa-body">Operator Connect links our carrier network directly to your Microsoft Admin Center—no hardware required. You simply assign Iristel phone numbers directly to your users inside Teams.</div>
       </details>
       <details class="qa rise">
-        <summary>Is this only for Nairobi businesses?</summary>
-        <div class="qa-body">No. Cloud services reach any site with a working internet connection, and we support multi-branch businesses across Kenya. Tell us your locations on the call and we will confirm what each one needs.</div>
+        <summary>Can we keep or port our existing phone numbers to Iristel in Kenya?</summary>
+        <div class="qa-body">Number porting is not currently available in Kenya. When you sign up, we assign fresh, direct business numbers straight from our local inventory so your company gets up and running without delay.</div>
       </details>
     </div>
   </div>
