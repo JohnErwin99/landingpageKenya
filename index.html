@@ -219,6 +219,45 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
 .err-msg{display:none;color:#FF8FA6;font-size:.76rem;margin-top:.28rem}
 .field.err .err-msg{display:block}
 .hp{position:absolute;left:-9999px;opacity:0;height:0;width:0}
+
+/* ---- bundle picker (NiftyQuoter line items) ---- */
+.bundles{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem}
+.bundle{
+  position:relative;text-align:left;width:100%;cursor:pointer;
+  padding:.85rem 2.6rem .85rem .95rem;border-radius:10px;
+  background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.13);
+  color:#fff;font-family:var(--body);transition:border-color .18s, background .18s;
+}
+.bundle:hover{border-color:rgba(46,139,224,.7);background:rgba(255,255,255,.07)}
+.bundle.on{border-color:var(--chevron);background:rgba(46,139,224,.13)}
+.bundle.on::after{
+  content:"";position:absolute;top:50%;right:.95rem;margin-top:-10px;
+  width:20px;height:20px;border-radius:50%;background:var(--chevron);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6.2l3 3 5-6' stroke='%23fff' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:center;background-size:12px;
+}
+.bundle-name{display:block;font-size:.92rem;font-weight:700;line-height:1.3}
+.bundle-price{display:block;font-family:var(--mono);font-size:.78rem;color:var(--chevron);margin-top:.18rem}
+.bundle-desc{display:block;font-size:.76rem;color:var(--slate);margin-top:.35rem;line-height:1.5}
+.bundles-err{display:none;color:#FF8FA6;font-size:.76rem;margin:-.6rem 0 .9rem}
+.bundles.err .bundles-err{display:block}
+
+/* ---- live progress log while the proposal is built ---- */
+.qlog{display:none;margin-top:.9rem;padding:.75rem .9rem;border-radius:10px;
+  background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:.8rem}
+.qlog.show{display:block}
+.qlog-row{display:flex;align-items:center;gap:.55rem;padding:.28rem 0;color:var(--slate)}
+.qdot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.22);flex:none}
+.qdot.ok{background:#38C08A}
+.qdot.fail{background:#FF6B8A}
+.qlog-row.now{color:#fff}
+.captcha{margin-top:1.1rem}
+/* the widget is a fixed 304px iframe; scale it down on narrow cards so it never
+   overflows the form-card padding */
+.captcha .g-recaptcha{transform-origin:0 0}
+.captcha-err{display:none;margin-top:.5rem;font-size:.8rem;color:#FF8FB0}
+.captcha.err .captcha-err{display:block}
+@media (max-width:400px){.captcha .g-recaptcha{transform:scale(.86)}.captcha{height:66px}}
 .form-card .btn{width:100%;margin-top:.55rem}
 .form-fail{display:none;margin-top:.85rem;padding:.7rem .85rem;border-radius:10px;
   background:rgba(255,107,138,.12);border:1px solid rgba(255,107,138,.4);
@@ -606,6 +645,29 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
     <!-- QUOTE FORM -->
     <div class="form-card" id="quote">
       <span class="price-flag">From KSh 20,000/month</span>
+      <!-- ══════════════════════════════════════════════════════════════════
+           SUPERSEDED — "Get your quote" lead-capture form (kept for reference)
+
+           How this used to work:
+             1. Visitor filled name / work email / phone / company / team size
+                and a "what do you need first?" dropdown. Nothing about pricing
+                or products was shown; the form only captured intent.
+             2. A hidden honeypot input (name="website") caught naive bots — any
+                value in it meant the submit was silently dropped.
+             3. reCAPTCHA v2 gated the submit client-side.
+             4. On submit the JS POSTed a JSON payload to FormSubmit's AJAX relay
+                (https://formsubmit.co/ajax/jerwin@iristel.com), which emailed the
+                lead as a table to that mailbox. FormSubmit answers HTTP 200 with
+                success:"false" for unactivated addresses, so the handler checked
+                the success flag rather than the status code.
+             5. Success swapped the card to the #formDone panel promising a
+                call-back within one business day. Failure showed #formFail with
+                the phone number and info@iristel.co.ke as a fallback.
+
+           Replaced by the live NiftyQuoter flow below, which builds and emails a
+           real proposal instead of a lead notification. The honeypot, reCAPTCHA
+           and the done/fail panels carried over to the new form.
+
       <form id="quoteForm" novalidate>
         <h2>Get your quote</h2>
         <p class="form-lede">Tell us what you run today. We come back with one plan and one price.</p>
@@ -660,8 +722,13 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
           </select>
         </div>
 
-        <!-- honeypot -->
+        honeypot
         <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+        <div class="captcha">
+          <div class="g-recaptcha" data-sitekey="6LdZ9IotAAAAABNXTrraDcP8QPDao5I-GXEkD04n" data-callback="onCaptchaSolved"></div>
+          <p class="captcha-err">Please confirm you're not a robot.</p>
+        </div>
 
         <button class="btn btn-primary" type="submit">Get my quote</button>
         <p class="form-fail" id="formFail">We couldn't send that just now. Please call
@@ -674,13 +741,80 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
           <a href="tel:+254208788888">+254 20 878 8888</a>
         </div>
       </form>
+      ══════════════════════════════════════════════════════════════════ -->
+
+      <!-- LIVE — builds a real NiftyQuoter proposal and emails it to the visitor -->
+      <form id="quoteForm" novalidate>
+        <h2>Build your quote</h2>
+        <p class="form-lede">Pick a bundle, tell us who you are, and we email your priced proposal straight away.</p>
+
+        <div class="bundles" id="bundles">
+          <!-- bundle buttons injected from PRODUCTS -->
+          <p class="bundles-err">Choose at least one bundle.</p>
+        </div>
+
+        <div class="two-up">
+          <div class="field">
+            <label for="name">Full name</label>
+            <input type="text" id="name" name="name" placeholder="Jane Wanjiru" autocomplete="name" required>
+            <span class="err-msg">Enter your name so we know who to ask for.</span>
+          </div>
+          <div class="field">
+            <label for="users">Number of users</label>
+            <input type="number" id="users" name="users" value="1" min="1" max="9999" required>
+            <span class="err-msg">Enter how many users you need.</span>
+          </div>
+        </div>
+
+        <div class="two-up">
+          <div class="field">
+            <label for="email">Work email</label>
+            <input type="email" id="email" name="email" placeholder="jane@company.co.ke" autocomplete="email" required>
+            <span class="err-msg">Check the email address — your quote is sent here.</span>
+          </div>
+          <div class="field">
+            <label for="phone">Phone</label>
+            <input type="tel" id="phone" name="phone" placeholder="+254 7xx xxx xxx" autocomplete="tel" required>
+            <span class="err-msg">Add a number we can call.</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="company">Company</label>
+          <input type="text" id="company" name="company" placeholder="Company name" autocomplete="organization" required>
+          <span class="err-msg">Add your company name.</span>
+        </div>
+
+        <!-- honeypot -->
+        <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+        <div class="captcha">
+          <div class="g-recaptcha" id="recaptcha" data-sitekey="6LdZ9IotAAAAABNXTrraDcP8QPDao5I-GXEkD04n" data-callback="onCaptchaSolved"></div>
+          <p class="captcha-err" id="captchaErr">Please confirm you're not a robot.</p>
+        </div>
+
+        <button class="btn btn-primary" type="submit">Email me my quote</button>
+
+        <div class="qlog" id="quoteLog" role="status" aria-live="polite"></div>
+
+        <p class="form-fail" id="formFail">We couldn't build that quote just now. Please call
+          <a href="tel:+254208788888">+254 20 878 8888</a> or email
+          <a href="mailto:info@iristel.co.ke">info@iristel.co.ke</a>.</p>
+        <p class="form-fine">Prices in Kenyan Shillings, inclusive of 16% VAT. No obligation, no switching fee to talk.</p>
+
+        <div class="form-alt">
+          <span>Prefer to talk now?</span>
+          <a href="tel:+254208788888">+254 20 878 8888</a>
+        </div>
+      </form>
 
       <div class="form-done" id="formDone">
         <div class="done-mark">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-        <h3>Quote request received</h3>
-        <p>A Nairobi-based specialist will call you within one business day. Need it sooner? Call <a href="tel:+254208788888" style="color:#fff">+254 20 878 8888</a>.</p>
+        <h3>Your quote is on its way</h3>
+        <p id="doneMsg">Check your inbox — your priced proposal is there, ready to review and approve online. A Nairobi-based specialist will follow up within one business day. Need it sooner? Call <a href="tel:+254208788888" style="color:#fff">+254 20 878 8888</a>.</p>
+        <p style="margin-top:1rem"><a class="btn btn-primary" id="viewQuote" href="#" target="_blank" rel="noopener" style="display:none;width:auto;padding:.8rem 1.5rem">View my quote</a></p>
       </div>
     </div>
   </div>
@@ -1032,8 +1166,9 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
 
   var invalid = function(el){
     if (!el.value.trim()) return true;
-    if (el.type === 'email') return !emailOk.test(el.value.trim());
-    if (el.type === 'tel')  return el.value.replace(/\D/g,'').length < 9;
+    if (el.type === 'email')  return !emailOk.test(el.value.trim());
+    if (el.type === 'tel')    return el.value.replace(/\D/g,'').length < 9;
+    if (el.type === 'number') return !(parseInt(el.value, 10) > 0);
     return false;
   };
 
@@ -1043,16 +1178,181 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
     });
   });
 
-  /* Lead delivery. FormSubmit relays the submission straight to this inbox.
-     Activation is per-address and this one is confirmed; info@iristel.co.ke
-     never received its activation mail, so leads land here and are forwarded
-     on from this mailbox. Repointing means activating the new address first. */
-  var LEAD_ENDPOINT = 'https://formsubmit.co/ajax/jerwin@iristel.com';
   var fail = document.getElementById('formFail');
+
+  /* ══════════════════════════════════════════════════════════════════════
+     SUPERSEDED — FormSubmit lead delivery (kept for reference)
+
+     The old submit path did no pricing at all. It serialised the form to a
+     flat JSON payload and POSTed it to FormSubmit's AJAX relay, which mailed
+     the lead as a table to a single inbox; a human then built the quote by
+     hand in NiftyQuoter and emailed it back.
+
+     The endpoint had one sharp edge worth remembering: FormSubmit activation
+     is per-address, and it answers HTTP 200 with success:"false" when the
+     destination address has never confirmed its activation mail. Only
+     jerwin@iristel.com was ever activated — info@iristel.co.ke never received
+     its activation mail — so the status code alone could not be trusted and
+     the handler had to test the success flag. Repointing meant activating the
+     new address first.
+
+     // var LEAD_ENDPOINT = 'https://formsubmit.co/ajax/jerwin@iristel.com';
+     //
+     // var payload = Object.fromEntries(new FormData(form).entries());
+     // delete payload.website;                    // drop honeypot from the email
+     //
+     // fetch(LEAD_ENDPOINT, {
+     //   method: 'POST',
+     //   headers: {'Content-Type':'application/json', 'Accept':'application/json'},
+     //   body: JSON.stringify({
+     //     _subject: 'Quote request — ' + (payload.company || payload.name),
+     //     _template: 'table',
+     //     _captcha: 'false',
+     //     name: payload.name,
+     //     email: payload.email,
+     //     phone: payload.phone,
+     //     company: payload.company,
+     //     'team size': payload.size,
+     //     'needs first': payload.need,
+     //     source: location.href
+     //   })
+     // })
+     // .then(function(r){ return r.json().catch(function(){ return {}; })
+     //                     .then(function(d){ return {ok:r.ok, status:r.status, data:d}; }); })
+     // .then(function(res){
+     //   var okFlag = String(res.data.success) === 'true';
+     //   if (!res.ok || !okFlag) {
+     //     throw new Error('FormSubmit ' + res.status + ': ' + (res.data.message || 'rejected'));
+     //   }
+     //   card.classList.add('done');
+     //   done.classList.add('show');
+     // })
+     // .catch(function(err){ ...show #formFail... });
+
+     Replaced by the live NiftyQuoter integration below: the visitor picks a
+     bundle and the page builds, prices and emails a real proposal itself.
+     ══════════════════════════════════════════════════════════════════════ */
+
+  /* ══════════════════════════════════════════════════════════════════════
+     LIVE — NiftyQuoter proposal generation
+     ══════════════════════════════════════════════════════════════════════ */
+  var API_KEY   = 'wSSeJNpsvBZlcApNhvlIHJmjdVvHq9VDbl5wf5RB';
+  var NQ_BASE   = 'https://api.niftyquoter.com/api/v1';
+  var ACC_EMAIL = 'jerwin@iristel.com';
+  var NQ_DOMAIN = 'https://quotes.iristel.com';
+  var TEAM_NOTIFY = ['jayoub@iristel.com', 'tkhei@iristel.com'];
+
+  /* Default content template applied to every proposal. Verify in the
+     NiftyQuoter UI (Templates -> edit -> ID in the browser URL). If the ID
+     does not exist, load_template_id is silently ignored and the proposal
+     renders only the default theme cover page. */
+  var TEMPLATE_ID = 49704;
+
+  /* Kenya Smart Connect Bundles, mirroring NiftyQuoter service template 59591.
+     price is KES excluding 16% VAT; priceVat is the VAT-inclusive amount. */
+  var PRODUCTS = {
+    kscb1: {
+      name: 'Smart Connect Bundle Operator Connect',
+      description: 'Microsoft Teams PSTN Connectivity · 1,000 Kenya minutes · Smart Manager Phone Management · ESET Cybersecurity Training and Protect Entry · Call Recording Entry',
+      price: '17241.38', priceVat: '20000.0', vat: '16.0',
+      period: '30', label: 'KSh 20,000/mo incl. VAT'
+    },
+    kscb2: {
+      name: 'Smart Connect Bundle Webex',
+      description: 'Iristel Cloud Calling with Webex Softphone · 1,000 Kenya minutes · ESET Cybersecurity Training and Protect Entry · Call Recording Entry',
+      price: '25000', priceVat: '29000.0', vat: '16.0',
+      period: '30', label: 'KSh 29,000/mo incl. VAT'
+    }
+  };
+
+  var authQS = function(){
+    return 'key=' + encodeURIComponent(API_KEY) + '&email=' + encodeURIComponent(ACC_EMAIL);
+  };
+  var enc = function(obj){ return new URLSearchParams(obj).toString(); };
+  var postForm = function(path, body){
+    return fetch(NQ_BASE + path + (path.indexOf('?') > -1 ? '&' : '?') + authQS(), {
+      method: 'POST',
+      headers: {'Content-Type':'application/x-www-form-urlencoded'},
+      body: enc(body)
+    });
+  };
+
+  /* ---- bundle picker ---- */
+  var chosen = [];
+  var bundleBox = document.getElementById('bundles');
+  var bundleErr = bundleBox.querySelector('.bundles-err');
+
+  Object.keys(PRODUCTS).forEach(function(pid){
+    var p = PRODUCTS[pid];
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'bundle';
+    b.setAttribute('aria-pressed', 'false');
+    b.innerHTML = '<span class="bundle-name"></span>' +
+                  '<span class="bundle-price"></span>' +
+                  '<span class="bundle-desc"></span>';
+    b.querySelector('.bundle-name').textContent  = p.name;
+    b.querySelector('.bundle-price').textContent = p.label;
+    b.querySelector('.bundle-desc').textContent  = p.description;
+    b.addEventListener('click', function(){
+      var i = chosen.indexOf(pid);
+      if (i > -1) chosen.splice(i, 1); else chosen.push(pid);
+      var on = chosen.indexOf(pid) > -1;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      if (chosen.length) bundleBox.classList.remove('err');
+    });
+    bundleBox.insertBefore(b, bundleErr);
+  });
+
+  /* ---- progress log ---- */
+  var logBox = document.getElementById('quoteLog');
+  var logStep = function(text){
+    var prev = logBox.querySelector('.qlog-row.now');
+    if (prev){ prev.classList.remove('now'); prev.querySelector('.qdot').classList.add('ok'); }
+    var row = document.createElement('div');
+    row.className = 'qlog-row now';
+    row.innerHTML = '<span class="qdot"></span>';
+    row.appendChild(document.createTextNode(text));
+    logBox.appendChild(row);
+    logBox.classList.add('show');
+    return row;
+  };
+  var logSettle = function(ok){
+    var row = logBox.querySelector('.qlog-row.now');
+    if (row){ row.classList.remove('now'); row.querySelector('.qdot').classList.add(ok ? 'ok' : 'fail'); }
+  };
+
+  /* Reuse an existing pricing table if the loaded template brought one in,
+     otherwise create one. Without a pricing table the line items are stored
+     but never rendered on the proposal. */
+  function getOrCreatePricingTable(propId){
+    return fetch(NQ_BASE + '/proposals/' + propId + '/pricing_tables?' + authQS())
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .catch(function(){ return null; })
+      .then(function(data){
+        var tables = data && (data.pricing_tables || data.pricing_table || data);
+        if (Array.isArray(tables) && tables.length && tables[0].id) return tables[0].id;
+        return postForm('/proposals/' + propId + '/pricing_tables', {
+          'pricing_table[name]':             'Your Quote',
+          'pricing_table[kind]':             'default',
+          'pricing_table[show_totals]':      'true',
+          'pricing_table[show_grandtotals]': 'true',
+          'pricing_table[position]':         '0'
+        }).then(function(r){ return r.ok ? r.json() : null; })
+          .then(function(d){ return d ? ((d.pricing_table && d.pricing_table.id) || d.id || null) : null; });
+      });
+  }
 
   form.addEventListener('submit', function(ev){
     ev.preventDefault();
     if (form.website.value) return;            // honeypot tripped
+
+    if (!chosen.length){
+      bundleBox.classList.add('err');
+      bundleBox.scrollIntoView({block:'center', behavior: reduce ? 'auto' : 'smooth'});
+      return;
+    }
 
     var bad = null;
     form.querySelectorAll('[required]').forEach(function(el){
@@ -1062,52 +1362,188 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
     });
     if (bad){ bad.focus(); return; }
 
-    var payload = Object.fromEntries(new FormData(form).entries());
-    delete payload.website;                    // drop honeypot from the email
+    /* reCAPTCHA gate. grecaptcha is absent if the script was blocked, in which
+       case we let the submission through rather than trap a real customer. */
+    var capBox = document.querySelector('.captcha');
+    var capToken = '';
+    if (window.grecaptcha && typeof grecaptcha.getResponse === 'function') {
+      capToken = grecaptcha.getResponse();
+      capBox.classList.toggle('err', !capToken);
+      if (!capToken){ capBox.scrollIntoView({block:'center', behavior: reduce ? 'auto' : 'smooth'}); return; }
+    }
+
+    var f       = Object.fromEntries(new FormData(form).entries());
+    var picked  = chosen.map(function(pid){ return PRODUCTS[pid]; });
+    var qty     = String(parseInt(f.users, 10) || 1);
+    var nameBits= f.name.trim().split(/\s+/);
+    var firstNm = nameBits[0] || 'there';
+    var company = f.company.trim();
+    var email   = f.email.trim();
 
     var btn = form.querySelector('button[type="submit"]');
     var label = btn.textContent;
     btn.disabled = true;
-    btn.textContent = 'Sending\u2026';
+    btn.textContent = 'Building your quote\u2026';
     fail.classList.remove('show');
+    logBox.innerHTML = '';
+    logBox.classList.remove('show');
 
-    fetch(LEAD_ENDPOINT, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json', 'Accept':'application/json'},
-      body: JSON.stringify({
-        _subject: 'Quote request \u2014 ' + (payload.company || payload.name),
-        _template: 'table',
-        _captcha: 'false',
-        name: payload.name,
-        email: payload.email,
-        phone: payload.phone,
-        company: payload.company,
-        'team size': payload.size,
-        'needs first': payload.need,
-        source: location.href
-      })
+    var proposalId = null;
+    var publicUrl  = '';
+
+    logStep('Creating your proposal');
+    postForm('/proposals', {
+      'proposal[name]': 'Kenya Smart Connect Quote' + (company ? ' \u2014 ' + company : '') +
+                        ' \u2014 ' + picked.map(function(p){ return p.name; }).join(' + '),
+      'proposal[load_template_id]': TEMPLATE_ID
     })
-    .then(function(r){ return r.json().catch(function(){ return {}; })
-                        .then(function(d){ return {ok:r.ok, status:r.status, data:d}; }); })
-    .then(function(res){
-      /* FormSubmit answers 200 with success:"false" when the address has not
-         confirmed the endpoint yet, so the status code alone is not enough. */
-      var okFlag = String(res.data.success) === 'true';
-      if (!res.ok || !okFlag) {
-        throw new Error('FormSubmit ' + res.status + ': ' + (res.data.message || 'rejected'));
+    .then(function(r){
+      return r.text().then(function(t){
+        if (!r.ok) throw new Error('Proposal creation failed \u2014 HTTP ' + r.status + ': ' + t);
+        return JSON.parse(t);
+      });
+    })
+    .then(function(d){
+      proposalId = (d.proposal && d.proposal.id) || d.id;
+      if (!proposalId) throw new Error('No proposal ID returned');
+      var token = (d.proposal && d.proposal.token) || d.token || '';
+      /* Provisional link \u2014 replaced with the real public contact URL below,
+         once a contact is attached and the public token exists. */
+      publicUrl = NQ_DOMAIN + '/proposals/' + proposalId + (token ? '?t=' + token : '');
+
+      logStep('Setting up your account');
+      return postForm('/clients', {
+        'client[first_name]':   nameBits[0] || '',
+        'client[last_name]':    nameBits.slice(1).join(' ') || '',
+        'client[company_name]': company,
+        'client[email]':        email,
+        'client[phone]':        f.phone.trim()
+      })
+      .then(function(r){
+        if (r.ok) return r.json().then(function(d){ return (d.client && d.client.id) || d.id; });
+        /* Already on file \u2014 look the client up by email instead. */
+        return fetch(NQ_BASE + '/clients?' + authQS() + '&search=' + encodeURIComponent(email))
+          .then(function(r2){ return r2.ok ? r2.json() : null; })
+          .then(function(sd){
+            var list = sd && (sd.clients || sd);
+            return (Array.isArray(list) && list.length) ? list[0].id : null;
+          });
+      })
+      .catch(function(){ return null; });
+    })
+    .then(function(clientId){
+      if (!clientId){
+        /* No contact means no public token, so the emailed link would hit the
+           admin login wall. Keep going \u2014 the proposal still exists for the
+           team \u2014 but say so in the console. */
+        console.warn('No client attached; public proposal URL unavailable.');
+        return;
       }
-      if (window.dataLayer) window.dataLayer.push({event:'quote_submit', team_size: payload.size, need: payload.need});
+      return postForm('/proposals/' + proposalId + '/contacts', {'contact[client_id]': clientId})
+        .then(function(){
+          return fetch(NQ_BASE + '/proposals/' + proposalId + '?' + authQS());
+        })
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(pd){
+          var prop = pd && (pd.proposal || pd);
+          var url = prop && (prop.first_contact_public_url_no_view_tracking || prop.first_contact_public_url);
+          if (!url) return;
+          try {
+            var u = new URL(url);
+            publicUrl = NQ_DOMAIN + u.pathname + u.search;   // keep it on the custom domain
+          } catch (e) { publicUrl = url; }
+        })
+        .catch(function(e){ console.warn('Could not resolve public proposal URL:', e); });
+    })
+    .then(function(){
+      logStep('Pricing your bundle');
+      return getOrCreatePricingTable(proposalId);
+    })
+    .then(function(tableId){
+      if (!tableId) throw new Error('No pricing table \u2014 items would not be visible');
+      logStep('Adding your line items');
+      /* Sequential, not parallel: NiftyQuoter orders items by position and
+         concurrent POSTs have come back out of order. */
+      return picked.reduce(function(chain, p, i){
+        return chain.then(function(){
+          return postForm('/proposals/' + proposalId + '/items', {
+            'item[name]':             p.name,
+            'item[description]':      p.description,
+            'item[kind]':             'item',
+            'item[pricing_table_id]': String(tableId),
+            'item[price]':            p.price,
+            'item[quantity]':         qty,
+            'item[vat]':              p.vat,
+            'item[price_vat]':        p.priceVat,
+            'item[discount]':         '',
+            'item[discount_type]':    'relative',
+            'item[optional]':         'false',
+            'item[optional_checked]': 'false',
+            'item[period]':           p.period,
+            'item[position]':         String(i)
+          }).then(function(r){
+            if (!r.ok) throw new Error('Item "' + p.name + '" failed \u2014 HTTP ' + r.status);
+          });
+        });
+      }, Promise.resolve());
+    })
+    .then(function(){
+      logStep('Emailing it to you');
+      var body = 'Hello ' + firstNm + ',\n\n' +
+        'Thank you for your interest in Iristel Kenya.\n\n' +
+        'Your quote is ready. You can view it by clicking here: ' + publicUrl + '\n\n' +
+        'Please review and pick any of the required options, and click to adjust the quantity of a line item.\n' +
+        'If you have any questions please feel free to let me know.\n\n' +
+        'To confirm your order, click the Approve button at the very bottom of the work order and follow the instructions to sign the agreement.\n\n' +
+        'Best regards,\nIristel Kenya';
+
+      return fetch(NQ_BASE + '/proposals/' + proposalId + '/send_email?' + authQS(), {
+        method: 'PUT',
+        headers: {'Content-Type':'application/x-www-form-urlencoded'},
+        body: enc({
+          'email_to':         email,
+          'email_subject':    'Your Iristel Quote' + (company ? ' \u2014 ' + company : ''),
+          'email_body':       body,
+          'email_attach_pdf': 'true',
+          'email_cc':         TEAM_NOTIFY.join(',')
+        })
+      }).then(function(r){
+        /* The proposal exists either way \u2014 a failed email is not a failed
+           quote, so log it and still show the visitor their link. */
+        if (!r.ok) console.warn('Proposal email failed \u2014 HTTP ' + r.status);
+      });
+    })
+    .then(function(){
+      logSettle(true);
+      if (window.dataLayer) {
+        window.dataLayer.push({
+          event: 'quote_generated',
+          proposal_id: proposalId,
+          bundles: picked.map(function(p){ return p.name; }).join(' + '),
+          users: qty
+        });
+      }
+      var link = document.getElementById('viewQuote');
+      if (publicUrl){ link.href = publicUrl; link.style.display = 'inline-block'; }
       card.classList.add('done');
       done.classList.add('show');
       done.scrollIntoView({block:'center', behavior: reduce ? 'auto' : 'smooth'});
     })
     .catch(function(err){
-      console.error('Lead submission failed:', err);
+      console.error('Quote generation failed:', err);
+      logSettle(false);
       btn.disabled = false;
       btn.textContent = label;
       fail.classList.add('show');
+      if (capToken && window.grecaptcha) grecaptcha.reset();   // token is single-use
     });
   });
+
+  /* clear the captcha error as soon as the challenge is solved */
+  window.onCaptchaSolved = function(){
+    var capBox = document.querySelector('.captcha');
+    if (capBox) capBox.classList.remove('err');
+  };
 
   /* ---- CTA click tracking hook ---- */
   document.querySelectorAll('a[href^="tel:"]').forEach(function(a){
@@ -1117,5 +1553,6 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
   });
 })();
 </script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </body>
 </html>
