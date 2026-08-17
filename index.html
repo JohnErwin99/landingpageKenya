@@ -242,6 +242,20 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
 .bundles-err{display:none;color:#FF8FA6;font-size:.76rem;margin:-.6rem 0 .9rem}
 .bundles.err .bundles-err{display:block}
 
+/* ---- chips for everything currently on the quote ---- */
+.picks{display:none;flex-wrap:wrap;gap:.4rem;margin:-.25rem 0 1rem}
+.picks.show{display:flex}
+.pick{
+  display:inline-flex;align-items:center;gap:.45rem;
+  background:rgba(46,139,224,.16);border:1px solid rgba(46,139,224,.45);
+  color:#DCE9F8;font-size:.76rem;font-weight:600;border-radius:999px;padding:.3rem .5rem .3rem .7rem;
+}
+.pick-x{
+  border:0;background:none;color:#9FBEE2;font-size:.72rem;line-height:1;
+  cursor:pointer;padding:.1rem .15rem;border-radius:50%;
+}
+.pick-x:hover{color:#fff}
+
 /* ---- live progress log while the proposal is built ---- */
 .qlog{display:none;margin-top:.9rem;padding:.75rem .9rem;border-radius:10px;
   background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:.8rem}
@@ -744,8 +758,18 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
 
         <div class="bundles" id="bundles">
           <!-- bundle buttons injected from PRODUCTS -->
-          <p class="bundles-err">Choose at least one bundle.</p>
+          <p class="bundles-err">Choose a bundle, or add an individual product below.</p>
         </div>
+
+        <div class="field">
+          <label for="extra">Or add individual products</label>
+          <select id="extra">
+            <option value="">Browse services…</option>
+            <!-- optgroups injected from CATALOG -->
+          </select>
+        </div>
+
+        <div class="picks" id="picks"></div>
 
         <div class="two-up">
           <div class="field">
@@ -1254,6 +1278,96 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
     }
   };
 
+  /* À-la-carte catalogue for the "add individual products" dropdown. Every
+     entry is a real line item pulled from the Kenya service templates, so the
+     name, price, VAT and billing period match what the sales team quotes:
+
+       53749  Kenya Service Pricing        — calling, Teams/Webex, trunks, contact centre
+       55682  Kenya Cybersecurity Pricing  — EDR, SIEM, awareness training
+       53771  Kenya IP Phone               — Yealink handsets
+
+     `tpl` records which template an item came from and `srcId` its item ID
+     there, so a price change in NiftyQuoter can be traced back to this list.
+     period '30' bills monthly; '' is a one-time charge.
+
+     Internal-only lines (activation fees, technician/engineering hourly rates,
+     mileage, set-up fees) are deliberately left out — they are quoted by a
+     rep, not self-served from the landing page. */
+  var CATALOG = [
+    { group: 'Cloud calling', tpl: 53749, items: [
+      { srcId: 14602643, name: 'Iristel Unite', price: '1800', priceVat: '2088.0', vat: '16.0', period: '30',
+        description: 'Cloud Voice, 2,500 minutes of Kenya calling, DID, Auto Attendant (5 users +) and Busy Lamp Fields.' },
+      { srcId: 14602647, name: 'Iristel Unite with Webex Basic', price: '2200', priceVat: '2552.0', vat: '16.0', period: '30',
+        description: 'Cloud Voice + Webex Basic — 2,500 minutes of Kenya calling, DID, softphone, messaging and file sharing.' },
+      { srcId: 14602649, name: 'Iristel Unite with Webex Standard', price: '2700', priceVat: '3132.0', vat: '16.0', period: '30',
+        description: 'Cloud Voice + Webex Standard — 2,500 minutes of Kenya calling, DID, softphone, messaging and file sharing.' },
+      { srcId: 14602652, name: 'Iristel Unite with Webex Premium', price: '4400', priceVat: '5104.0', vat: '16.0', period: '30',
+        description: 'Cloud Voice + Webex Premium — 2,500 minutes of Kenya calling, DID, softphone, messaging and file sharing.' }
+    ]},
+    { group: 'Microsoft Teams', tpl: 53749, items: [
+      { srcId: 16397896, name: 'Operator Connect', price: '1200', priceVat: '1392.0', vat: '16.0', period: '',
+        description: '1,500 minutes of Kenya calling per user, delivered natively inside Microsoft Teams.' },
+      { srcId: 14720370, name: 'Teams Calling License', price: '400', priceVat: '464.0', vat: '16.0', period: '30',
+        description: 'PSTN calling licence for a Microsoft Teams user.' },
+      { srcId: 14720371, name: 'Teams Calling Phone App', price: '300', priceVat: '348.0', vat: '16.0', period: '30',
+        description: 'Teams calling on the desk phone app.' }
+    ]},
+    { group: 'Trunks and numbers', tpl: 53749, items: [
+      { srcId: 14720366, name: 'SIP Trunk (Dynamic Registration)', price: '2000', priceVat: '2320.0', vat: '16.0', period: '30',
+        description: '2,500 minutes of Kenya calling per channel.' },
+      { srcId: 15252585, name: 'SIP Trunk (Static Registration)', price: '3150', priceVat: '3654.0', vat: '16.0', period: '',
+        description: 'Static-registration SIP trunk.' },
+      { srcId: 14720368, name: 'DID', price: '300', priceVat: '348.0', vat: '16.0', period: '30',
+        description: 'Direct inward dial number.' },
+      { srcId: 14720413, name: 'Toll Free Number', price: '200', priceVat: '232.0', vat: '16.0', period: '',
+        description: 'Toll free number. Calls charged at 6 KSh per minute.' }
+    ]},
+    { group: 'Call handling', tpl: 53749, items: [
+      { srcId: 14602656, name: 'Auto-Attendant', price: '3000', priceVat: '3480.0', vat: '16.0', period: '30',
+        description: 'Automated attendant to route incoming calls.' },
+      { srcId: 14602659, name: 'Call Queue', price: '1000', priceVat: '1160.0', vat: '16.0', period: '30',
+        description: 'Queue incoming calls to a group of users.' },
+      { srcId: 14602655, name: 'Common Area Extension', price: '1000', priceVat: '1160.0', vat: '16.0', period: '30',
+        description: 'Shared extension for a common area.' },
+      { srcId: 14602662, name: 'Virtual User with Call Forwarding', price: '1000', priceVat: '1160.0', vat: '16.0', period: '30',
+        description: 'Virtual extension that forwards to another number.' },
+      { srcId: 14602663, name: 'Virtual User with VoiceMail', price: '500', priceVat: '580.0', vat: '16.0', period: '30',
+        description: 'Virtual extension with a voicemail box.' },
+      { srcId: 14720412, name: 'Virtual Fax', price: '1000', priceVat: '1160.0', vat: '16.0', period: '30',
+        description: 'Send and receive faxes from your existing email account.' }
+    ]},
+    { group: 'Contact centre', tpl: 53749, items: [
+      { srcId: 17019353, name: 'Cloud Contact — Core Voice', price: '8400', priceVat: '9744.0', vat: '16.0', period: '30',
+        description: 'Manage all inbound, outbound and blended campaigns.' },
+      { srcId: 17019355, name: 'Cloud Contact — Omnichannel', price: '10600', priceVat: '12296.0', vat: '16.0', period: '30',
+        description: 'Manage interactions across every channel from one unified inbox.' }
+    ]},
+    { group: 'Cybersecurity', tpl: 55682, items: [
+      { srcId: 16890055, name: 'Managed Endpoint Detection & Response', price: '4600', priceVat: '5336.0', vat: '16.0', period: '30',
+        description: 'Managed EDR, priced per endpoint.' },
+      { srcId: 16890059, name: 'Managed SIEM', price: '1150', priceVat: '1150.0', vat: '0.0', period: '30',
+        description: 'Managed SIEM, per GB with a 500 GB minimum.' },
+      { srcId: 16890178, name: 'Cybersecurity Awareness Training', price: '1150', priceVat: '1150.0', vat: '0.0', period: '',
+        description: 'KnowBe4 platform, Diamond level, per seat on a 12-month term.' },
+      { srcId: 16890057, name: 'Vulnerability Assessment', price: '57500', priceVat: '57500.0', vat: '0.0', period: '',
+        description: 'Scan package, initial IP.' }
+    ]},
+    { group: 'IP phones', tpl: 53771, items: [
+      { srcId: 14639549, name: 'Yealink SIP-T31P', price: '9000', priceVat: '9000.0', vat: '0.0', period: '',
+        description: 'Entry-level desk phone.' },
+      { srcId: 14639550, name: 'Yealink SIP-T43U', price: '20000', priceVat: '20000.0', vat: '0.0', period: '',
+        description: 'Mid-range desk phone.' },
+      { srcId: 14639551, name: 'Yealink SIP-T48U', price: '42000', priceVat: '42000.0', vat: '0.0', period: '',
+        description: 'Touchscreen executive desk phone.' }
+    ]}
+  ];
+
+  var money = function(n){ return 'KSh ' + Number(n).toLocaleString('en-KE'); };
+  var priceLabel = function(p){
+    return money(p.priceVat) + (p.period === '30' ? '/mo' : ' one-time') +
+           (p.vat === '0.0' ? '' : ' incl. VAT');
+  };
+
   var authQS = function(){
     return 'key=' + encodeURIComponent(API_KEY) + '&email=' + encodeURIComponent(ACC_EMAIL);
   };
@@ -1266,10 +1380,17 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
     });
   };
 
-  /* ---- bundle picker ---- */
+  /* ---- selection: bundle cards + à-la-carte dropdown ----
+     `chosen` is the single source of truth for both pickers. Bundles carry
+     their PRODUCTS key so the card can be toggled back off; dropdown items
+     carry their catalogue srcId. Both shapes end up as line items. */
   var chosen = [];
   var bundleBox = document.getElementById('bundles');
   var bundleErr = bundleBox.querySelector('.bundles-err');
+  var picksBox  = document.getElementById('picks');
+  var extraSel  = document.getElementById('extra');
+
+  var keyOf = function(entry){ return entry.pid || ('src' + entry.p.srcId); };
 
   Object.keys(PRODUCTS).forEach(function(pid){
     var p = PRODUCTS[pid];
@@ -1284,15 +1405,74 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
     b.querySelector('.bundle-price').textContent = p.label;
     b.querySelector('.bundle-desc').textContent  = p.description;
     b.addEventListener('click', function(){
-      var i = chosen.indexOf(pid);
-      if (i > -1) chosen.splice(i, 1); else chosen.push(pid);
-      var on = chosen.indexOf(pid) > -1;
+      var at = -1;
+      chosen.forEach(function(e, i){ if (e.pid === pid) at = i; });
+      if (at > -1) chosen.splice(at, 1); else chosen.push({pid: pid, p: p});
+      var on = at === -1;
       b.classList.toggle('on', on);
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
-      if (chosen.length) bundleBox.classList.remove('err');
+      renderPicks();
     });
     bundleBox.insertBefore(b, bundleErr);
   });
+
+  /* Build the à-la-carte dropdown, one optgroup per catalogue group. The
+     option value is the group/item index pair so the lookup stays exact even
+     if two templates ever ship an identically named item. */
+  CATALOG.forEach(function(g, gi){
+    var og = document.createElement('optgroup');
+    og.label = g.group;
+    g.items.forEach(function(it, ii){
+      var o = document.createElement('option');
+      o.value = gi + ':' + ii;
+      o.textContent = it.name + ' — ' + priceLabel(it);
+      og.appendChild(o);
+    });
+    extraSel.appendChild(og);
+  });
+
+  extraSel.addEventListener('change', function(){
+    if (!extraSel.value) return;
+    var parts = extraSel.value.split(':');
+    var g = CATALOG[parts[0]];
+    var it = g.items[parts[1]];
+    var already = chosen.some(function(e){ return e.p.srcId === it.srcId; });
+    if (!already) chosen.push({p: it, tpl: g.tpl});
+    extraSel.value = '';                     // back to the placeholder
+    renderPicks();
+  });
+
+  /* Chips for everything currently selected, from either picker. */
+  function renderPicks(){
+    picksBox.innerHTML = '';
+    chosen.forEach(function(entry){
+      var chip = document.createElement('span');
+      chip.className = 'pick';
+      var txt = document.createElement('span');
+      txt.textContent = entry.p.name;
+      var x = document.createElement('button');
+      x.type = 'button';
+      x.className = 'pick-x';
+      x.setAttribute('aria-label', 'Remove ' + entry.p.name);
+      x.textContent = '✕';
+      x.addEventListener('click', function(){
+        var at = chosen.indexOf(entry);
+        if (at > -1) chosen.splice(at, 1);
+        if (entry.pid){
+          /* keep the matching bundle card in sync */
+          var cards = bundleBox.querySelectorAll('.bundle');
+          var idx = Object.keys(PRODUCTS).indexOf(entry.pid);
+          if (cards[idx]){ cards[idx].classList.remove('on'); cards[idx].setAttribute('aria-pressed','false'); }
+        }
+        renderPicks();
+      });
+      chip.appendChild(txt);
+      chip.appendChild(x);
+      picksBox.appendChild(chip);
+    });
+    picksBox.classList.toggle('show', chosen.length > 0);
+    if (chosen.length) bundleBox.classList.remove('err');
+  }
 
   /* ---- progress log ---- */
   var logBox = document.getElementById('quoteLog');
@@ -1352,7 +1532,7 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
     if (bad){ bad.focus(); return; }
 
     var f     = Object.fromEntries(new FormData(form).entries());
-    var picked  = chosen.map(function(pid){ return PRODUCTS[pid]; });
+    var picked  = chosen.map(function(e){ return e.p; });
     var qty     = String(parseInt(f.users, 10) || 1);
     var nameBits= f.name.trim().split(/\s+/);
     var firstNm = nameBits[0] || 'there';
@@ -1370,10 +1550,15 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
     var proposalId = null;
     var publicUrl  = '';
 
+    /* Keep the proposal name readable \u2014 an \u00e0-la-carte cart can run long. */
+    var names = picked.map(function(p){ return p.name; });
+    var nameSummary = names.length > 3
+      ? names.slice(0, 3).join(' + ') + ' + ' + (names.length - 3) + ' more'
+      : names.join(' + ');
+
     logStep('Creating your proposal');
     postForm('/proposals', {
-      'proposal[name]': 'Kenya Smart Connect Quote' + (company ? ' \u2014 ' + company : '') +
-                        ' \u2014 ' + picked.map(function(p){ return p.name; }).join(' + '),
+      'proposal[name]': 'Kenya Quote' + (company ? ' \u2014 ' + company : '') + ' \u2014 ' + nameSummary,
       'proposal[load_template_id]': TEMPLATE_ID
     })
     .then(function(r){
@@ -1498,7 +1683,7 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
         window.dataLayer.push({
           event: 'quote_generated',
           proposal_id: proposalId,
-          bundles: picked.map(function(p){ return p.name; }).join(' + '),
+          products: names.join(' + '),
           users: qty
         });
       }
