@@ -251,13 +251,6 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
 .qdot.ok{background:#38C08A}
 .qdot.fail{background:#FF6B8A}
 .qlog-row.now{color:#fff}
-.captcha{margin-top:1.1rem}
-/* the widget is a fixed 304px iframe; scale it down on narrow cards so it never
-   overflows the form-card padding */
-.captcha .g-recaptcha{transform-origin:0 0}
-.captcha-err{display:none;margin-top:.5rem;font-size:.8rem;color:#FF8FB0}
-.captcha.err .captcha-err{display:block}
-@media (max-width:400px){.captcha .g-recaptcha{transform:scale(.86)}.captcha{height:66px}}
 .form-card .btn{width:100%;margin-top:.55rem}
 .form-fail{display:none;margin-top:.85rem;padding:.7rem .85rem;border-radius:10px;
   background:rgba(255,107,138,.12);border:1px solid rgba(255,107,138,.4);
@@ -665,8 +658,9 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
                 the phone number and info@iristel.co.ke as a fallback.
 
            Replaced by the live NiftyQuoter flow below, which builds and emails a
-           real proposal instead of a lead notification. The honeypot, reCAPTCHA
-           and the done/fail panels carried over to the new form.
+           real proposal instead of a lead notification. The honeypot and the
+           done/fail panels carried over to the new form; the reCAPTCHA widget
+           shown below was dropped — the honeypot is now the only bot filter.
 
       <form id="quoteForm" novalidate>
         <h2>Get your quote</h2>
@@ -787,11 +781,6 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
 
         <!-- honeypot -->
         <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-
-        <div class="captcha">
-          <div class="g-recaptcha" id="recaptcha" data-sitekey="6LdZ9IotAAAAABNXTrraDcP8QPDao5I-GXEkD04n" data-callback="onCaptchaSolved"></div>
-          <p class="captcha-err" id="captchaErr">Please confirm you're not a robot.</p>
-        </div>
 
         <button class="btn btn-primary" type="submit">Email me my quote</button>
 
@@ -1362,17 +1351,7 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
     });
     if (bad){ bad.focus(); return; }
 
-    /* reCAPTCHA gate. grecaptcha is absent if the script was blocked, in which
-       case we let the submission through rather than trap a real customer. */
-    var capBox = document.querySelector('.captcha');
-    var capToken = '';
-    if (window.grecaptcha && typeof grecaptcha.getResponse === 'function') {
-      capToken = grecaptcha.getResponse();
-      capBox.classList.toggle('err', !capToken);
-      if (!capToken){ capBox.scrollIntoView({block:'center', behavior: reduce ? 'auto' : 'smooth'}); return; }
-    }
-
-    var f       = Object.fromEntries(new FormData(form).entries());
+    var f     = Object.fromEntries(new FormData(form).entries());
     var picked  = chosen.map(function(pid){ return PRODUCTS[pid]; });
     var qty     = String(parseInt(f.users, 10) || 1);
     var nameBits= f.name.trim().split(/\s+/);
@@ -1535,15 +1514,8 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
       btn.disabled = false;
       btn.textContent = label;
       fail.classList.add('show');
-      if (capToken && window.grecaptcha) grecaptcha.reset();   // token is single-use
     });
   });
-
-  /* clear the captcha error as soon as the challenge is solved */
-  window.onCaptchaSolved = function(){
-    var capBox = document.querySelector('.captcha');
-    if (capBox) capBox.classList.remove('err');
-  };
 
   /* ---- CTA click tracking hook ---- */
   document.querySelectorAll('a[href^="tel:"]').forEach(function(a){
@@ -1553,6 +1525,5 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
   });
 })();
 </script>
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </body>
 </html>
