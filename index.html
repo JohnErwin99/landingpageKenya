@@ -765,7 +765,7 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
           <label for="extra">Or add individual products</label>
           <select id="extra">
             <option value="">Browse services…</option>
-            <!-- optgroups injected from CATALOG -->
+            <!-- options injected from CATALOG -->
           </select>
         </div>
 
@@ -1279,87 +1279,47 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
   };
 
   /* À-la-carte catalogue for the "add individual products" dropdown. Every
-     entry is a real line item pulled from the Kenya service templates, so the
+     entry is a real line item pulled from a Kenya service template, so the
      name, price, VAT and billing period match what the sales team quotes:
 
-       53749  Kenya Service Pricing        — calling, Teams/Webex, trunks, contact centre
-       55682  Kenya Cybersecurity Pricing  — EDR, SIEM, awareness training
-       53771  Kenya IP Phone               — Yealink handsets
+       53749  Kenya Service Pricing        — Operator Connect, Webex, Cloud Contact
+       55682  Kenya Cybersecurity Pricing  — managed detection and response
 
      `tpl` records which template an item came from and `srcId` its item ID
      there, so a price change in NiftyQuoter can be traced back to this list.
+     `name` is posted to NiftyQuoter verbatim so the proposal matches the
+     catalogue; `label` is the friendlier wording shown to the visitor.
      period '30' bills monthly; '' is a one-time charge.
 
-     Internal-only lines (activation fees, technician/engineering hourly rates,
-     mileage, set-up fees) are deliberately left out — they are quoted by a
-     rep, not self-served from the landing page. */
+     NOT LISTED, because no Kenya-priced item exists to link to:
+       · Smart Manager — appears only in template 47457, which is the Canadian
+         catalogue (CAD 3 per user). Quoting that figure as KSh would be wrong.
+       · Cloud call recording — only ever appears as "Call Recording Entry"
+         bundled inside the two Smart Connect bundles above; templates 56319
+         and 47456 return no items.
+     Add either to a Kenya service template with real KSh pricing and it drops
+     straight into this list. */
   var CATALOG = [
-    { group: 'Cloud calling', tpl: 53749, items: [
-      { srcId: 14602643, name: 'Iristel Unite', price: '1800', priceVat: '2088.0', vat: '16.0', period: '30',
-        description: 'Cloud Voice, 2,500 minutes of Kenya calling, DID, Auto Attendant (5 users +) and Busy Lamp Fields.' },
-      { srcId: 14602647, name: 'Iristel Unite with Webex Basic', price: '2200', priceVat: '2552.0', vat: '16.0', period: '30',
-        description: 'Cloud Voice + Webex Basic — 2,500 minutes of Kenya calling, DID, softphone, messaging and file sharing.' },
-      { srcId: 14602649, name: 'Iristel Unite with Webex Standard', price: '2700', priceVat: '3132.0', vat: '16.0', period: '30',
-        description: 'Cloud Voice + Webex Standard — 2,500 minutes of Kenya calling, DID, softphone, messaging and file sharing.' },
-      { srcId: 14602652, name: 'Iristel Unite with Webex Premium', price: '4400', priceVat: '5104.0', vat: '16.0', period: '30',
-        description: 'Cloud Voice + Webex Premium — 2,500 minutes of Kenya calling, DID, softphone, messaging and file sharing.' }
-    ]},
-    { group: 'Microsoft Teams', tpl: 53749, items: [
-      { srcId: 16397896, name: 'Operator Connect', price: '1200', priceVat: '1392.0', vat: '16.0', period: '',
-        description: '1,500 minutes of Kenya calling per user, delivered natively inside Microsoft Teams.' },
-      { srcId: 14720370, name: 'Teams Calling License', price: '400', priceVat: '464.0', vat: '16.0', period: '30',
-        description: 'PSTN calling licence for a Microsoft Teams user.' },
-      { srcId: 14720371, name: 'Teams Calling Phone App', price: '300', priceVat: '348.0', vat: '16.0', period: '30',
-        description: 'Teams calling on the desk phone app.' }
-    ]},
-    { group: 'Trunks and numbers', tpl: 53749, items: [
-      { srcId: 14720366, name: 'SIP Trunk (Dynamic Registration)', price: '2000', priceVat: '2320.0', vat: '16.0', period: '30',
-        description: '2,500 minutes of Kenya calling per channel.' },
-      { srcId: 15252585, name: 'SIP Trunk (Static Registration)', price: '3150', priceVat: '3654.0', vat: '16.0', period: '',
-        description: 'Static-registration SIP trunk.' },
-      { srcId: 14720368, name: 'DID', price: '300', priceVat: '348.0', vat: '16.0', period: '30',
-        description: 'Direct inward dial number.' },
-      { srcId: 14720413, name: 'Toll Free Number', price: '200', priceVat: '232.0', vat: '16.0', period: '',
-        description: 'Toll free number. Calls charged at 6 KSh per minute.' }
-    ]},
-    { group: 'Call handling', tpl: 53749, items: [
-      { srcId: 14602656, name: 'Auto-Attendant', price: '3000', priceVat: '3480.0', vat: '16.0', period: '30',
-        description: 'Automated attendant to route incoming calls.' },
-      { srcId: 14602659, name: 'Call Queue', price: '1000', priceVat: '1160.0', vat: '16.0', period: '30',
-        description: 'Queue incoming calls to a group of users.' },
-      { srcId: 14602655, name: 'Common Area Extension', price: '1000', priceVat: '1160.0', vat: '16.0', period: '30',
-        description: 'Shared extension for a common area.' },
-      { srcId: 14602662, name: 'Virtual User with Call Forwarding', price: '1000', priceVat: '1160.0', vat: '16.0', period: '30',
-        description: 'Virtual extension that forwards to another number.' },
-      { srcId: 14602663, name: 'Virtual User with VoiceMail', price: '500', priceVat: '580.0', vat: '16.0', period: '30',
-        description: 'Virtual extension with a voicemail box.' },
-      { srcId: 14720412, name: 'Virtual Fax', price: '1000', priceVat: '1160.0', vat: '16.0', period: '30',
-        description: 'Send and receive faxes from your existing email account.' }
-    ]},
-    { group: 'Contact centre', tpl: 53749, items: [
-      { srcId: 17019353, name: 'Cloud Contact — Core Voice', price: '8400', priceVat: '9744.0', vat: '16.0', period: '30',
-        description: 'Manage all inbound, outbound and blended campaigns.' },
-      { srcId: 17019355, name: 'Cloud Contact — Omnichannel', price: '10600', priceVat: '12296.0', vat: '16.0', period: '30',
-        description: 'Manage interactions across every channel from one unified inbox.' }
-    ]},
-    { group: 'Cybersecurity', tpl: 55682, items: [
-      { srcId: 16890055, name: 'Managed Endpoint Detection & Response', price: '4600', priceVat: '5336.0', vat: '16.0', period: '30',
-        description: 'Managed EDR, priced per endpoint.' },
-      { srcId: 16890059, name: 'Managed SIEM', price: '1150', priceVat: '1150.0', vat: '0.0', period: '30',
-        description: 'Managed SIEM, per GB with a 500 GB minimum.' },
-      { srcId: 16890178, name: 'Cybersecurity Awareness Training', price: '1150', priceVat: '1150.0', vat: '0.0', period: '',
-        description: 'KnowBe4 platform, Diamond level, per seat on a 12-month term.' },
-      { srcId: 16890057, name: 'Vulnerability Assessment', price: '57500', priceVat: '57500.0', vat: '0.0', period: '',
-        description: 'Scan package, initial IP.' }
-    ]},
-    { group: 'IP phones', tpl: 53771, items: [
-      { srcId: 14639549, name: 'Yealink SIP-T31P', price: '9000', priceVat: '9000.0', vat: '0.0', period: '',
-        description: 'Entry-level desk phone.' },
-      { srcId: 14639550, name: 'Yealink SIP-T43U', price: '20000', priceVat: '20000.0', vat: '0.0', period: '',
-        description: 'Mid-range desk phone.' },
-      { srcId: 14639551, name: 'Yealink SIP-T48U', price: '42000', priceVat: '42000.0', vat: '0.0', period: '',
-        description: 'Touchscreen executive desk phone.' }
-    ]}
+    { srcId: 16397896, tpl: 53749,
+      name: 'Operator Connect  (1500 minutes of  Kenya Calling (per user)',
+      label: 'Operator Connect',
+      price: '1200', priceVat: '1392.0', vat: '16.0', period: '',
+      description: '1,500 minutes of Kenya calling per user, delivered natively inside Microsoft Teams.' },
+    { srcId: 14602649, tpl: 53749,
+      name: 'Iristel Unite with Webex Standard',
+      label: 'Unified communications with Webex',
+      price: '2700', priceVat: '3132.0', vat: '16.0', period: '30',
+      description: 'Cloud Voice + Webex Standard — 2,500 minutes of Kenya calling, DID, softphone, messaging and file sharing.' },
+    { srcId: 17019353, tpl: 53749,
+      name: 'Cloud Contact - Core Voice',
+      label: 'Cloud contact centre',
+      price: '8400', priceVat: '9744.0', vat: '16.0', period: '30',
+      description: 'Manage all inbound, outbound and blended campaigns.' },
+    { srcId: 16890055, tpl: 55682,
+      name: 'Managed Endpoint Detection & Response',
+      label: 'Cybersecurity — managed detection and response',
+      price: '4600', priceVat: '5336.0', vat: '16.0', period: '30',
+      description: 'Managed endpoint detection and response, priced per endpoint.' }
   ];
 
   var money = function(n){ return 'KSh ' + Number(n).toLocaleString('en-KE'); };
@@ -1416,28 +1376,20 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
     bundleBox.insertBefore(b, bundleErr);
   });
 
-  /* Build the à-la-carte dropdown, one optgroup per catalogue group. The
-     option value is the group/item index pair so the lookup stays exact even
-     if two templates ever ship an identically named item. */
-  CATALOG.forEach(function(g, gi){
-    var og = document.createElement('optgroup');
-    og.label = g.group;
-    g.items.forEach(function(it, ii){
-      var o = document.createElement('option');
-      o.value = gi + ':' + ii;
-      o.textContent = it.name + ' — ' + priceLabel(it);
-      og.appendChild(o);
-    });
-    extraSel.appendChild(og);
+  /* Build the à-la-carte dropdown. The option value is the catalogue index,
+     so the lookup stays exact regardless of naming. */
+  CATALOG.forEach(function(it, i){
+    var o = document.createElement('option');
+    o.value = String(i);
+    o.textContent = (it.label || it.name) + ' — ' + priceLabel(it);
+    extraSel.appendChild(o);
   });
 
   extraSel.addEventListener('change', function(){
     if (!extraSel.value) return;
-    var parts = extraSel.value.split(':');
-    var g = CATALOG[parts[0]];
-    var it = g.items[parts[1]];
+    var it = CATALOG[Number(extraSel.value)];
     var already = chosen.some(function(e){ return e.p.srcId === it.srcId; });
-    if (!already) chosen.push({p: it, tpl: g.tpl});
+    if (!already) chosen.push({p: it, tpl: it.tpl});
     extraSel.value = '';                     // back to the placeholder
     renderPicks();
   });
@@ -1448,12 +1400,13 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
     chosen.forEach(function(entry){
       var chip = document.createElement('span');
       chip.className = 'pick';
+      var shown = entry.p.label || entry.p.name;
       var txt = document.createElement('span');
-      txt.textContent = entry.p.name;
+      txt.textContent = shown;
       var x = document.createElement('button');
       x.type = 'button';
       x.className = 'pick-x';
-      x.setAttribute('aria-label', 'Remove ' + entry.p.name);
+      x.setAttribute('aria-label', 'Remove ' + shown);
       x.textContent = '✕';
       x.addEventListener('click', function(){
         var at = chosen.indexOf(entry);
@@ -1551,7 +1504,7 @@ textarea:focus-visible,summary:focus-visible{outline:2.5px solid var(--chevron);
     var publicUrl  = '';
 
     /* Keep the proposal name readable \u2014 an \u00e0-la-carte cart can run long. */
-    var names = picked.map(function(p){ return p.name; });
+    var names = picked.map(function(p){ return p.label || p.name; });
     var nameSummary = names.length > 3
       ? names.slice(0, 3).join(' + ') + ' + ' + (names.length - 3) + ' more'
       : names.join(' + ');
